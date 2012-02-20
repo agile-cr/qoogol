@@ -1,18 +1,22 @@
+# -*- mode:python; coding:utf-8; tab-width:4 -*-
 
-from UnitTests.lib import ControllerTestCase
+import sys, os
+prj_root = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(prj_root)
+
+from .lib import ControllerTestCase
 from hamcrest import *
 from pyDoubles.framework import *
 from SimpleApp.domain import QuestionService, Question
 
 __author__ = 'tdd'
-import sys
 
 
 class Controller_UnitTests(ControllerTestCase):
     controller_modules = ['controllers', 'factory']
 
     def setUp(self):
-        super(Controller_UnitTests,self).setUp()
+        super(Controller_UnitTests, self).setUp()
 
     def get_questions_page(self, questions):
         self.factory.question_service = spy(QuestionService())
@@ -39,7 +43,7 @@ class Controller_UnitTests(ControllerTestCase):
 
         # when
         response = self.client.get("/question/create/",
-            {"statement":"are you alive?"})
+            {"statement": "are you alive?"})
 
         # then
         assert_that(response.content, contains_string("Question Created"))
