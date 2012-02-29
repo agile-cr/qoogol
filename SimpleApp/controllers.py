@@ -13,8 +13,9 @@ def get_questions(request):
     if not questions:
         return HttpResponse("NO_QUESTIONS")
 
-    return render_to_response("question_list.html",
-                              {"questions": questions})
+    return render_to_response(
+        "question_list.html",
+        {"questions": questions, "questions_len": len(questions)})
 
 
 def create_question(request):
@@ -28,3 +29,19 @@ def create_question(request):
 
     factory.question_service().create_question(statement)
     return HttpResponse("Question Created")
+
+
+def delete_question(request, question_id):
+    factory.question_service.delete_question(int(question_id))
+    return  get_questions(request)
+
+def modify_question(request, question_id):
+    statement = request.GET['statement']
+
+    factory.question_service.modify_question(int(question_id), statement)
+
+    return get_questions(request)
+
+def delete_selected(request, question_ids):
+    factory.question_service.delete_selected([int(x) for x in question_ids.split(',')])
+    return get_questions(request)

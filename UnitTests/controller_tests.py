@@ -17,21 +17,23 @@ class Controller_UnitTests(ControllerTestCase):
 
     def setUp(self):
         super(Controller_UnitTests, self).setUp()
+        self.factory.question_service = QuestionService()
 
-    def get_questions_page(self, questions):
-        self.factory.question_service = spy(QuestionService())
-        when(self.factory.question_service.get_questions).then_return(questions)
-
-        return self.client.get("/question/list/")
+    def add_questions(self, questions):
+        self.factory.question_service.add_questions(questions)
 
     def test_empty_question_list(self):
-        response = self.get_questions_page([])
+        self.add_questions([])
+
+        response = self.client.get("/question/list/")
 
         assert_that(response.content,
                     contains_string("NO_QUESTIONS"))
 
     def test_one_question_list(self):
-        response = self.get_questions_page([Question(text="are you alive?")])
+        self.add_questions([Question(text="are you alive?")])
+
+        response = self.client.get("/question/list/")
 
         assert_that(response.content,
                     contains_string("are you alive"))
@@ -56,8 +58,64 @@ class Controller_UnitTests(ControllerTestCase):
 
         # when
         response = self.client.get("/question/create/",
-            {"statement":""})
+            {"statement": ""})
 
         # then
         assert_that(response.content,
                     contains_string("INVALID STATEMENT"))
+
+    def test_delete_last_question(self):
+        question = Question(text="are you alive?")
+        self.add_questions([question])
+
+        response = self.client.get("/question/delete/%s" % question.id)
+
+        assert_that(response.content,
+                    contains_string("NO_QUESTIONS"))
+
+    def test_delete_one_question(self):
+        # given
+        question_alive = Question(text="are you alive?")
+        question_dead = Question(text="are you dead?")
+
+        self.add_questions([question_alive, question_dead])
+
+        # when
+        response = self.client.get("/question/delete/%s" % question_alive.id)
+
+        # then
+        assert_that(response.content,
+                    not contains_string("are you alive?"))
+        assert_that(response.content,
+                    contains_string("are you dead?"))
+
+    def test_modify_question(self):
+        question = Question(text="are you alive?")
+        self.add_questions([question])
+
+        response = self.client.get("/question/modify/%s" % question.id,
+                                   {"statement": "are you dead?"})
+
+        assert_that(response.content,
+                    contains_string("are you dead"))
+        assert_that(response.content,
+                    not contains_string("alive"))
+
+    def test_delete_selected_questions(self):
+        #given
+        questions = [
+            Question(text="are you alive?"),
+            Question(text="are you dead?"),
+            Question(text="are you sleeping?")]
+
+        self.add_questions(questions)
+
+        # when
+        question_ids = str.join(",", [str(q.id) for q in questions[::2]])
+        response = self.client.get("/question/delete_selected/%s" % question_ids)
+
+        # then
+        assert_that(response.content,
+                    contains_string("are you dead?"))
+        assert_that(response.content,
+                    contains_string("QUESTIONS_LEN:1"))
