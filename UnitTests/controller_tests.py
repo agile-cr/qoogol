@@ -7,7 +7,7 @@ sys.path.append(prj_root)
 from .lib import ControllerTestCase
 from hamcrest import *
 from pyDoubles.framework import *
-from SimpleApp.domain import QuestionService, Question
+from SimpleApp.domain import QuestionaryService, QuestionService, Questionary, Question
 
 __author__ = 'tdd'
 
@@ -18,6 +18,7 @@ class Controller_UnitTests(ControllerTestCase):
     def setUp(self):
         super(Controller_UnitTests, self).setUp()
         self.factory.question_service = QuestionService()
+        self.factory.questionary_service = QuestionaryService()
 
     def add_questions(self, questions):
         self.factory.question_service.add_questions(questions)
@@ -45,7 +46,7 @@ class Controller_UnitTests(ControllerTestCase):
 
         # when
         response = self.client.get("/question/create/",
-            {"statement": "are you alive?"})
+                                   {"statement": "are you alive?"})
 
         # then
         assert_that(response.content, contains_string("Question Created"))
@@ -58,7 +59,7 @@ class Controller_UnitTests(ControllerTestCase):
 
         # when
         response = self.client.get("/question/create/",
-            {"statement": ""})
+                                   {"statement": ""})
 
         # then
         assert_that(response.content,
@@ -119,3 +120,41 @@ class Controller_UnitTests(ControllerTestCase):
                     contains_string("are you dead?"))
         assert_that(response.content,
                     contains_string("QUESTIONS_LEN:1"))
+
+    def add_questionaries(self, questionaries):
+        self.factory.questionary_service.add_questionaries(questionaries)
+
+    def test_empty_questionary_list(self):
+        self.add_questionaries([])
+
+        response = self.client.get("/questionary/list/")
+
+        assert_that(response.content,
+                    contains_string("NO_QUESTIONARIES"))
+
+    def test_list_one_questionary(self):
+        self.add_questionaries([Questionary(subject="Life style")])
+
+        response = self.client.get("/questionary/list/")
+
+        assert_that(response.content,
+                    contains_string("Life style"))
+
+    def test_get_questionary_without_questions(self):
+        questionary = Questionary(subject="Life style")
+        questionary.save()
+        self.add_questionaries([questionary])
+
+        response = self.client.get("/questionary/{0}".format(
+                questionary.id))
+
+        assert_that(response.content,
+                    contains_string('title:Life style'))
+        assert_that(response.content,
+                    contains_string("QUESTIONS_LEN:0"))
+
+
+
+#    def test_add_question_to_questionary(self):
+#        self.add_questionaries([Questionary(subject="Life style")])
+#        self.add_questions([Question(text="are you alive?")])

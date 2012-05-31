@@ -18,6 +18,16 @@ def get_questions(request):
         {"questions": questions, "questions_len": len(questions)})
 
 
+def get_questionaries(request):
+    questionaries = factory.questionary_service.get_questionaries()
+    if not questionaries:
+        return HttpResponse("NO_QUESTIONARIES")
+
+    return render_to_response(
+        "questionary_list.html",
+        {"questionaries": questionaries, "questionaries_len": len(questionaries)})
+
+
 def create_question(request):
     if "statement" not in request.GET:
         return HttpResponse("Error to create question")
@@ -33,7 +43,8 @@ def create_question(request):
 
 def delete_question(request, question_id):
     factory.question_service.delete_question(int(question_id))
-    return  get_questions(request)
+    return get_questions(request)
+
 
 def modify_question(request, question_id):
     statement = request.GET['statement']
@@ -42,6 +53,16 @@ def modify_question(request, question_id):
 
     return get_questions(request)
 
+
 def delete_selected(request, question_ids):
     factory.question_service.delete_selected([int(x) for x in question_ids.split(',')])
     return get_questions(request)
+
+
+def get_questionary(request, questionary_id):
+    questionary = factory.questionary_service.get_questionary(int(questionary_id))
+
+    return render_to_response(
+        "questionary.html",
+        {"subject": questionary.subject,
+         "questions_len": len(questionary.question_set.all())})

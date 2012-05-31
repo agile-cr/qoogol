@@ -12,4 +12,6 @@ urlpatterns = patterns(
     url(r'^question/delete/(?P<question_id>\d+)$', controllers.delete_question),
     url(r'^question/modify/(?P<question_id>\d+)$', controllers.modify_question),
     url(r'^question/delete_selected/(?P<question_ids>[\d+,\,]+)$', controllers.delete_selected),
+    url(r'^questionary/list/$', controllers.get_questionaries),
+    url(r'^questionary/(?P<questionary_id>\d+)$', controllers.get_questionary),
 )
